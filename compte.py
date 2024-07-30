@@ -10,11 +10,9 @@ from tkinter import messagebox
 CSV_FILE = "save/expenses.csv"
 CSV_FILE_BUDGET = 'save/budget_mensuel.csv'
 
-if not os.path.exists('budget_mensuel.csv'):
-        with open('budget_mensuel.csv', 'w', newline='') as csvfile:
-            fieldnames = ['Mois', 'Année'] + categories
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
+if not os.path.exists(CSV_FILE_BUDGET):
+        with open(CSV_FILE_BUDGET, 'w', newline='') as csvfile:
+            print('creating')
 
 def mois_en_nombre(mois):
     mois_dict = {
@@ -43,7 +41,7 @@ categories = ["Nourriture", "Vie quotidienne", "Santé", "Loisir", "Vêtement", 
 # budget = [212,30,20,30,30,84,12,0]
 
 # Liste des mois et des catégories
-lMois = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+lMois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
 
 categoriess = ['Mois','Nourriture', 'Vie quotidienne', 'Santé', 'Loisir', 'Vêtement', 'Transport', 'Coiffeur', 'Épargne', 'Total']
 
@@ -54,6 +52,27 @@ directory_path = Path('save')
 
 if not directory_path.exists():
     directory_path.mkdir(parents=True, exist_ok=False)
+
+
+def trier_colonne(tv, col, type_donnees):
+    l = [(tv.set(k, col), k) for k in tv.get_children('')]
+    
+    if type_donnees == 'date':
+        l.sort(key=lambda t: datetime.strptime(t[0], '%d/%m/%Y'))
+    elif type_donnees == 'prix':
+        l.sort(key=lambda t: float(t[0]),reverse = True)
+    elif type_donnees == 'mois':
+        l.sort(key=lambda t: float(t[0]))
+        # TODO trier dans l'ordre des mois
+    else:
+        l.sort(key=lambda t: t[0])
+    
+    for index, (val, k) in enumerate(l):
+        tv.move(k, '', index)
+    
+    tv.heading(col, command=lambda: trier_colonne(tv, col, type_donnees))
+
+
 
 
 # Fonction pour ajouter une dépense
@@ -105,12 +124,11 @@ def load_expenses():
             for row in reader:
                 name, date, price, category, description = row
                 price = float(price)
-                if ("Tous" == selected_year) or ((selected_year == date.split('/')[2] and date.split('/')[1] == selected_month)or  selected_month == "Tous") :
+                if ("Tous" == selected_year) or ((selected_year == date.split('/')[2] and date.split('/')[1] == selected_month)or  (selected_month == "Tous"and selected_year == date.split('/')[2])) :
                     if(price >0):
                         expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('red',))
                     else :
                         expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('green',))
-
 
     update_totals()
 
@@ -126,18 +144,6 @@ def update_totals():
         selected_year = year_var.get()
 
         totals = get_budget_for_month_year(mois_en_nombre(mois),selected_year)
-        # print(totals)
-
-        # totals["Nourriture"] = budget[0]
-        # totals["Vie quotidienne"] = budget[1]
-        # totals["Santé"] = budget[2]
-        # totals["Loisir"] = budget[3]
-        # totals["Vêtement"] = budget[4]
-        # totals["Transport"] = budget[5]
-        # totals["Coiffeur"] = budget[6]
-        # totals["Epargne"] = budget[7]
-
-        # total_general = totals["Nourriture"] +totals["Vie quotidienne"]+ totals["Santé"]+totals["Loisir"]+totals["Vêtement"]+totals["Transport"]+totals["Coiffeur"]+ totals["Epargne"]
 
         if os.path.exists(CSV_FILE):
             with open(CSV_FILE, mode='r', encoding='utf-8') as file:
@@ -274,14 +280,22 @@ year_menu = OptionMenu(root, year_var, *years)
 year_menu.grid(row=20, column=1)
 year_var.set(current_date_time.year)
 
+
+
 # Tableau pour afficher les dépenses
 expenses_table = ttk.Treeview(root, columns=("Nom", "Date", "Prix", "Catégorie", "Description"), show="headings")
-expenses_table.heading("Nom", text="Nom")
-expenses_table.heading("Date", text="Date")
-expenses_table.heading("Prix", text="Prix")
-expenses_table.heading("Catégorie", text="Catégorie")
-expenses_table.heading("Description", text="Description")
+expenses_table.heading("Nom", text="Nom", command=lambda: trier_colonne(expenses_table, 'Nom', 'texte'))
+expenses_table.heading("Date", text="Date", command=lambda: trier_colonne(expenses_table, 'Date', 'date'))
+expenses_table.heading("Prix", text="Prix", command=lambda: trier_colonne(expenses_table, 'Prix', 'prix') )
+expenses_table.heading("Catégorie", text="Catégorie", command=lambda: trier_colonne(expenses_table, 'Catégorie', 'texte'))
+expenses_table.heading("Description", text="Description", command=lambda: trier_colonne(expenses_table, 'Description', 'texte'))
 expenses_table.grid(row=21, column=0, columnspan=4)
+
+expenses_table.column('Nom', width=200)
+expenses_table.column('Date', width=100)
+expenses_table.column('Prix', width=100)
+expenses_table.column('Catégorie', width=100)
+expenses_table.column('Description', width=500)
 
 expenses_table.tag_configure('red', background='light sky blue')
 expenses_table.tag_configure('green', background='lightgreen')
@@ -322,7 +336,11 @@ table.tag_configure('green', background='lightgreen')
 
 # Définir les en-têtes de colonnes
 for categorie in categoriess:
-    table.heading(categorie, text=categorie)
+    if (categorie == "Mois"):
+        table.heading(categorie, text=categorie, command=lambda: trier_colonne(table, categorie, 'mois'))
+    else :
+        table.heading(categorie, text=categorie, command=lambda: trier_colonne(table, categorie, 'prix'))
+    
 
 # Ajuster la largeur des colonnes
 for categorie in categoriess:
@@ -347,37 +365,52 @@ def save_budget():
         try:
             budgets[category] = float(entry.get())
         except ValueError:
-            messagebox.showerror("Erreur de saisie", f"Veuillez entrer un nombre valide pour {category}")
+            messagebox.showerror("Erreur de saisie", f"Veuillez entrer un nombre valide pour le budget de {category}")
             return
 
     month = month_var.get()
     year = year_var.get()
+    if(month == "Tous"):
+        for month in lMois :
+            with open(CSV_FILE_BUDGET, 'a', newline='') as csvfile:
+                fieldnames = ['Mois', 'Année'] + categories
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-    if not month.isdigit() or not year.isdigit():
-        messagebox.showerror("Erreur de saisie", "Veuillez entrer un mois et une année valides")
-        return
+                # Écrire l'en-tête seulement si le fichier est vide
+                if csvfile.tell() == 0:
+                    writer.writeheader()
 
-    month = int(month)
-    year = int(year)
+                row = {'Mois': mois_en_nombre(month), 'Année': year}
+                row.update(budgets)
+                writer.writerow(row)
 
-    if month < 1 or month > 12 or year < 1:
-        messagebox.showerror("Erreur de saisie", "Veuillez entrer un mois (1-12) et une année valides")
-        return
+        messagebox.showinfo("Succès", "Le budget a été enregistré avec succès pour tous les mois de cette année")
+    else :
+        if not month.isdigit() or not year.isdigit():
+            messagebox.showerror("Erreur de saisie", "Veuillez entrer un mois et une année valides")
+            return
 
-    # Enregistrer dans un fichier CSV
-    with open(CSV_FILE_BUDGET, 'a', newline='') as csvfile:
-        fieldnames = ['Mois', 'Année'] + categories
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        month = int(month)
+        year = int(year)
 
-        # Écrire l'en-tête seulement si le fichier est vide
-        if csvfile.tell() == 0:
-            writer.writeheader()
+        if month < 1 or month > 12 or year < 1:
+            messagebox.showerror("Erreur de saisie", "Veuillez entrer un mois (1-12) et une année valides")
+            return
 
-        row = {'Mois': month, 'Année': year}
-        row.update(budgets)
-        writer.writerow(row)
+        # Enregistrer dans un fichier CSV
+        with open(CSV_FILE_BUDGET, 'a', newline='') as csvfile:
+            fieldnames = ['Mois', 'Année'] + categories
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-    messagebox.showinfo("Succès", "Le budget a été enregistré avec succès")
+            # Écrire l'en-tête seulement si le fichier est vide
+            if csvfile.tell() == 0:
+                writer.writeheader()
+
+            row = {'Mois': month, 'Année': year}
+            row.update(budgets)
+            writer.writerow(row)
+
+        messagebox.showinfo("Succès", "Le budget a été enregistré avec succès pour le mois "+str(month)+"/"+str(year))
 
 
 
@@ -393,7 +426,7 @@ def get_budget_for_month_year(month,year):
     
 
     if (month == "Tous" or year == "Tous"):
-        return
+        return {cat: 0 for cat in categories}
 
     if not month.isdigit() or not year.isdigit():
         messagebox.showerror("Erreur de saisie", "Veuillez entrer un mois et une année valides")
@@ -483,6 +516,7 @@ frame.grid_columnconfigure(1, weight=1)
 frame.grid_columnconfigure(2, weight=1)
 frame.grid_columnconfigure(3, weight=1)
 
+# trier_colonne(expenses_table,1,"date")
 
 # Lancer la boucle principale de l'interface graphique
 load_expenses()
