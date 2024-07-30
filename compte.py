@@ -53,6 +53,8 @@ directory_path = Path('save')
 if not directory_path.exists():
     directory_path.mkdir(parents=True, exist_ok=False)
 
+def get_month_index(mois):
+    return lMois.index(mois)
 
 def trier_colonne(tv, col, type_donnees):
     l = [(tv.set(k, col), k) for k in tv.get_children('')]
@@ -62,7 +64,7 @@ def trier_colonne(tv, col, type_donnees):
     elif type_donnees == 'prix':
         l.sort(key=lambda t: float(t[0]),reverse = True)
     elif type_donnees == 'mois':
-        l.sort(key=lambda t: float(t[0]))
+        l.sort(key=lambda t: get_month_index(t[1]))
         # TODO trier dans l'ordre des mois
     else:
         l.sort(key=lambda t: t[0])
