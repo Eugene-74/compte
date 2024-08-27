@@ -224,6 +224,14 @@ def delete_expense():
 # Configuration de l'interface graphique
 root = Tk()
 root.title("Gestion des Comptes")
+# root.attributes('-fullscreen', True)
+root.update_idletasks()
+root.state('zoomed')
+max_width = root.winfo_screenwidth()
+max_height = root.winfo_screenheight()
+# root.geometry(str(max_width)+'x'+str(max_height))
+# print(f"Largeur: {width}, Hauteur: {height}")
+
 
 # Variables pour les champs d'entrée
 name_var = StringVar()
@@ -232,28 +240,32 @@ price_var = StringVar()
 category_var = StringVar()
 category_var.set(categories[0])
 
+depenseFrame = ttk.Frame(root, padding="10")
+depenseFrame.grid(row=0, column=0)
+
+
 # Widgets pour les champs d'entrée
-Label(root, text="Ajouter une dépense").grid(row=0, column=0,columnspan=2)
+Label(depenseFrame, text="Ajouter une dépense").grid(row=0, column=0,columnspan=2)
 
 
-Label(root, text="Nom").grid(row=1, column=0)
-Entry(root, textvariable=name_var).grid(row=1, column=1)
+Label(depenseFrame, text="Nom").grid(row=1, column=0)
+Entry(depenseFrame, textvariable=name_var).grid(row=1, column=1)
 
-Label(root, text="Date (JJ/MM/AAAA)").grid(row=2, column=0)
-Entry(root, textvariable=date_var).grid(row=2, column=1)
+Label(depenseFrame, text="Date (JJ/MM/AAAA)").grid(row=2, column=0)
+Entry(depenseFrame, textvariable=date_var).grid(row=2, column=1)
 
-Label(root, text="Prix").grid(row=3, column=0)
-Entry(root, textvariable=price_var).grid(row=3, column=1)
+Label(depenseFrame, text="Prix").grid(row=3, column=0)
+Entry(depenseFrame, textvariable=price_var).grid(row=3, column=1)
 
-Label(root, text="Catégorie").grid(row=4, column=0)
-OptionMenu(root, category_var, *categories).grid(row=4, column=1)
+Label(depenseFrame, text="Catégorie").grid(row=4, column=0)
+OptionMenu(depenseFrame, category_var, *categories).grid(row=4, column=1)
 
-Label(root, text="Description").grid(row=5, column=0)
-description_text = Text(root, height=1, width=15)
+Label(depenseFrame, text="Description").grid(row=5, column=0)
+description_text = Text(depenseFrame, height=1, width=15)
 description_text.grid(row=5, column=1)
 
 # Bouton pour ajouter une dépense
-submit_button = ttk.Button(root,text="Ajouter", command=add_expense)
+submit_button = ttk.Button(depenseFrame,text="Ajouter", command=add_expense)
 submit_button.grid(row=6, column=0,columnspan=2)
 # Button(root, text="Ajouter", command=add_expense).grid(row=6, column=0,columnspan=2)
 
@@ -265,9 +277,12 @@ current_date_time = datetime.now()
 # Menu déroulant pour sélectionner le mois et l'année
 # Label(root, text="Filtrer par mois et année:").grid(row=7, column=0)
 
+dateFrame = ttk.Frame(root, padding="10")
+dateFrame.grid(row=1, column=0)
+
 month_var = StringVar()
-month_menu = OptionMenu(root, month_var, *months)
-month_menu.grid(row=20, column=0)
+month_menu = OptionMenu(dateFrame, month_var, *months)
+month_menu.grid(row=0, column=0)
 
 if(current_date_time.month<10):
     month_var.set( "0" + str(current_date_time.month))
@@ -278,20 +293,26 @@ else :
 
 # Vous pouvez personnaliser les années selon celles présentes dans votre CSV
 year_var = StringVar()
-year_menu = OptionMenu(root, year_var, *years)
-year_menu.grid(row=20, column=1)
+year_menu = OptionMenu(dateFrame, year_var, *years)
+year_menu.grid(row=0, column=1)
 year_var.set(current_date_time.year)
 
+submit_button = ttk.Button(dateFrame, text="Mettre à jour", command=load_expenses)
+submit_button.grid(row=0, column=2)
 
+# Button(dateFrame, text="Mettre à jour", command=load_expenses).grid(row=0, column=2  )
+
+expensesFrame = ttk.Frame(root, padding="10")
+expensesFrame.grid(row=0, column=1)
 
 # Tableau pour afficher les dépenses
-expenses_table = ttk.Treeview(root, columns=("Nom", "Date", "Prix", "Catégorie", "Description"), show="headings")
+expenses_table = ttk.Treeview(expensesFrame, columns=("Nom", "Date", "Prix", "Catégorie", "Description"), show="headings")
 expenses_table.heading("Nom", text="Nom", command=lambda: trier_colonne(expenses_table, 'Nom', 'texte'))
 expenses_table.heading("Date", text="Date", command=lambda: trier_colonne(expenses_table, 'Date', 'date'))
 expenses_table.heading("Prix", text="Prix", command=lambda: trier_colonne(expenses_table, 'Prix', 'prix') )
 expenses_table.heading("Catégorie", text="Catégorie", command=lambda: trier_colonne(expenses_table, 'Catégorie', 'texte'))
 expenses_table.heading("Description", text="Description", command=lambda: trier_colonne(expenses_table, 'Description', 'texte'))
-expenses_table.grid(row=21, column=0, columnspan=4)
+expenses_table.grid(row=0, column=0)
 
 expenses_table.column('Nom', width=200)
 expenses_table.column('Date', width=100)
@@ -304,15 +325,15 @@ expenses_table.tag_configure('green', background='lightgreen')
 
 # Bouton pour supprimer une dépense sélectionnée
 # Button(root, text="Supprimer Dépense", command=delete_expense).grid(row=9, column=1)
-submit_button = ttk.Button(root, text="Supprimer dépense", command=delete_expense)
-submit_button.grid(row=22, column=1)
+submit_button = ttk.Button(expensesFrame, text="Supprimer dépense", command=delete_expense)
+submit_button.grid(row=1, column=0)
 
 # Zone de texte pour afficher les totaux
 # expenses_list = Text(root, height=15, width=60)
 # expenses_list.grid(row=9, column=0, columnspan=3)
 
 # Bouton pour charger les dépenses
-Button(root, text="Mettre à jour", command=load_expenses).grid(row=20, column=2  )
+
 
 
 
@@ -326,12 +347,13 @@ Button(root, text="Mettre à jour", command=load_expenses).grid(row=20, column=2
 
 
 # Créer le cadre principal
-mainframe = ttk.Frame(root, padding="10")
-mainframe.grid(row=30, column=0, columnspan=4)
+# mainframe = ttk.Frame(root, padding="10")
+# mainframe.grid(row=30, column=0, columnspan=4)
 
 # Créer le tableau avec Treeview
-table = ttk.Treeview(mainframe, columns=categoriess, show='headings')
-table.grid(row=10, column=0, columnspan=4)
+table = ttk.Treeview(root, columns=categoriess, show='headings')
+table.grid(row=2, column=1)
+table["height"] = 12
 
 table.tag_configure('red', background='salmon')
 table.tag_configure('green', background='lightgreen')
@@ -355,9 +377,9 @@ for i, mois in enumerate(lMois):
 
 # Configurer la mise en forme de la grille
 for i in range(len(mois) + 2):
-    mainframe.rowconfigure(i, weight=1)
+    root.rowconfigure(i, weight=1)
 for j in range(len(categoriess)):
-    mainframe.columnconfigure(j, weight=1)
+    root.columnconfigure(j, weight=1)
 
 
 # Fonction pour récupérer les valeurs des entrées et les sauvegarder dans un fichier CSV
@@ -465,27 +487,34 @@ def get_budget_for_month_year(month,year):
 
 entries = {}
 
+budgetFrame = ttk.Frame(root, padding="10")
+budgetFrame.grid(row=2, column=0)
+
 def updateBudget():
     # Dictionnaire pour stocker les entrées
     month = month_var.get()
     year = year_var.get()
     budgets = get_budget_for_month_year(month,year)
     # Ajout des labels et des entrées pour chaque catégorie
-    label = ttk.Label(root, text="Saisir le budget")
-    label.grid(row=0, column=3,columnspan=2)
+
+    
+
+    label = ttk.Label(budgetFrame, text="Saisir le budget")
+    label.grid(row=0, column=0,columnspan=2)
 
     for i, category in enumerate(categories, start=1):
-        label = ttk.Label(root, text=category)
-        label.grid(row=i, column=3, padx=5, pady=5)
-        entry = ttk.Entry(root, width=10)
-        entry.grid(row=i, column=4, padx=5, pady=5)
+        label = ttk.Label(budgetFrame, text=category)
+        label.grid(row=i, column=0, padx=5, pady=5)
+        entry = ttk.Entry(budgetFrame, width=10)
+        entry.grid(row=i, column=1, padx=5, pady=5)
         # entry.setvar = 12
         entry.insert(0,budgets[category])
         entries[category] = entry
 updateBudget()
 # Bouton pour valider les budgets
-submit_button = ttk.Button(root, text="Valider", command=save_budget)
-submit_button.grid(row=len(categories) + 2, column=3, columnspan=4, pady=10)
+
+submit_button = ttk.Button(budgetFrame, text="Valider", command=save_budget)
+submit_button.grid(row=len(categories) +1, column=0,columnspan=2, pady=10)
 
 # Configuration de la grille pour l'expansion
 for i in range(len(categories) + 2):
