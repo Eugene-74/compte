@@ -81,10 +81,51 @@ def trier_colonne(tv, col, type_donnees):
 def add_expense():
     name = name_var.get()
     date = date_var.get()
-    price = price_var.get()
+    price = price_var.get().replace(",",".")
     category = category_var.get()
     description = description_text.get("1.0", END).strip()
 
+    try :
+        list = date.split("/")
+        if len(list[0]) > 2 or len(list[0]) < 1:
+            messagebox.showerror("Erreur de saisie", f"Veuillez entrer une date valide, le jour doit contenir 1 ou 2 chiffre (00 ou 0)")
+        elif len(str(int(list[0]))) == 1 :
+            jour = "0" + str(int(list[0]))
+        elif len(str(int(list[0]))) == 2 :
+            jour = str(int(list[0]))
+
+        if len(list[1]) > 2 or len(list[1]) < 1:
+            messagebox.showerror("Erreur de saisie", f"Veuillez entrer une date valide, le mois doit contenir 1 ou 2 chiffre (00 ou 0)")
+        elif int(list[1]) > 12 or int(list[1]) < 1:
+            messagebox.showerror("Erreur de saisie", f"Veuillez entrer une date valide, le mois doit être entre 1 et 12")
+        elif len(str(int(list[1]))) == 1 :
+            mois = "0" + str(int(list[1]))
+        elif len(str(int(list[1]))) == 2 :
+            mois = str(int(list[1]))
+
+        print(len(list[2]))
+
+        if len(list[2]) != 2 and len(list[2]) != 4:
+            messagebox.showerror("Erreur de saisie", f"Veuillez entrer une date valide, l'année doit être à 2 ou 4 chiffre (0000 ou 00)")
+        elif int(list[2]) < 0:
+            messagebox.showerror("Erreur de saisie", f"Veuillez entrer une date valide, l'année doit être suppérieur à 0")
+        elif len(list[2]) == 2 :
+            print("20" + str(int(list[2])))
+            annee = "20" + str(int(list[2]))
+        elif len(list[2]) == 4 :
+            annee = str(int(list[2]))
+
+        float(price)
+    except ValueError:
+        messagebox.showerror("Erreur de saisie", f"Veuillez entrer une date valide")
+        return
+    date = jour + "/" +  mois + "/" + annee
+
+    try :
+        float(price)
+    except ValueError:
+        messagebox.showerror("Erreur de saisie", f"Veuillez entrer un prix valide")
+        return
     
     if name and date and price and category:
         with open(CSV_FILE, mode='a', newline='', encoding='utf-8') as file:
@@ -372,7 +413,7 @@ for categorie in categoriess:
 
 # Ajouter les lignes pour chaque mois
 for i, mois in enumerate(lMois):
-    table.insert('', 'end', iid=mois, values=(mois, *["" for _ in categoriess[:-1]], "0.00"))
+    table.insert('', 'end', iid=mois, values=(mois, *["" for _ in categoriess[:-1]], "0,00"))
 
 
 # Configurer la mise en forme de la grille
@@ -387,7 +428,7 @@ def save_budget():
     budgets = {}
     for category, entry in entries.items():
         try:
-            budgets[category] = float(entry.get())
+            budgets[category] = float(entry.get().replace(',','.'))
         except ValueError:
             messagebox.showerror("Erreur de saisie", f"Veuillez entrer un nombre valide pour le budget de {category}")
             return
