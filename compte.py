@@ -103,19 +103,18 @@ def add_expense():
         elif len(str(int(list[1]))) == 2 :
             mois = str(int(list[1]))
 
-        print(len(list[2]))
+        # print(len(list[2]))
 
         if len(list[2]) != 2 and len(list[2]) != 4:
             messagebox.showerror("Erreur de saisie", f"Veuillez entrer une date valide, l'année doit être à 2 ou 4 chiffre (0000 ou 00)")
         elif int(list[2]) < 0:
             messagebox.showerror("Erreur de saisie", f"Veuillez entrer une date valide, l'année doit être suppérieur à 0")
         elif len(list[2]) == 2 :
-            print("20" + str(int(list[2])))
+            # print("20" + str(int(list[2])))
             annee = "20" + str(int(list[2]))
         elif len(list[2]) == 4 :
             annee = str(int(list[2]))
 
-        float(price)
     except ValueError:
         messagebox.showerror("Erreur de saisie", f"Veuillez entrer une date valide")
         return
@@ -124,8 +123,16 @@ def add_expense():
     try :
         float(price)
     except ValueError:
-        messagebox.showerror("Erreur de saisie", f"Veuillez entrer un prix valide")
-        return
+        try :
+            list = price.split("*")
+            total = 1
+            for i in range(len(list)) :
+                total = total*int(list[i])
+            price = total
+        except ValueError:
+            messagebox.showerror("Erreur de saisie", f"Veuillez entrer un prix valide")
+            return
+
     
     if name and date and price and category:
         with open(CSV_FILE, mode='a', newline='', encoding='utf-8') as file:
@@ -425,6 +432,8 @@ for j in range(len(categoriess)):
 
 # Fonction pour récupérer les valeurs des entrées et les sauvegarder dans un fichier CSV
 def save_budget():
+    # TODO A finir marche pas pour les doublons
+    ajouter_modifier_budget("","",None)
     budgets = {}
     for category, entry in entries.items():
         try:
@@ -476,6 +485,15 @@ def save_budget():
             writer.writerow(row)
 
         messagebox.showinfo("Succès", "Le budget a été enregistré avec succès pour le mois "+str(month)+"/"+str(year))
+
+
+    # TODO A finir marche pas pour les doublons
+def ajouter_modifier_budget(month,year,budget):
+    with open(CSV_FILE_BUDGET, mode='r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        fieldnames = reader.fieldnames
+        for row in reader:
+            print(row)
 
 
 
