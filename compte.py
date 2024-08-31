@@ -433,30 +433,25 @@ for j in range(len(categoriess)):
 # Fonction pour récupérer les valeurs des entrées et les sauvegarder dans un fichier CSV
 def save_budget():
     # TODO A finir marche pas pour les doublons
-    ajouter_modifier_budget("","",None)
-    budgets = {}
-    for category, entry in entries.items():
-        try:
-            budgets[category] = float(entry.get().replace(',','.'))
-        except ValueError:
-            messagebox.showerror("Erreur de saisie", f"Veuillez entrer un nombre valide pour le budget de {category}")
-            return
-
     month = month_var.get()
     year = year_var.get()
+    
+
+    # ajouter_modifier_budget(month,year,budgets)
+    
+
+    
     if(month == "Tous"):
-        for month in lMois :
-            with open(CSV_FILE_BUDGET, 'a', newline='') as csvfile:
-                fieldnames = ['Mois', 'Année'] + categories
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        for mois in lMois :
+            budgets = {"Mois":mois_en_nombre(mois),"Année":year}
 
-                # Écrire l'en-tête seulement si le fichier est vide
-                if csvfile.tell() == 0:
-                    writer.writeheader()
-
-                row = {'Mois': mois_en_nombre(month), 'Année': year}
-                row.update(budgets)
-                writer.writerow(row)
+            for category, entry in entries.items():
+                try:
+                    budgets[category] = float(entry.get().replace(',','.'))
+                except ValueError:
+                    messagebox.showerror("Erreur de saisie", f"Veuillez entrer un nombre valide pour le budget de {category}")
+                    return
+            ajouter_modifier_budget( mois_en_nombre(mois),year,budgets)
 
         messagebox.showinfo("Succès", "Le budget a été enregistré avec succès pour tous les mois de cette année")
     else :
@@ -472,32 +467,43 @@ def save_budget():
             return
 
         # Enregistrer dans un fichier CSV
-        with open(CSV_FILE_BUDGET, 'a', newline='') as csvfile:
-            fieldnames = ['Mois', 'Année'] + categories
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-            # Écrire l'en-tête seulement si le fichier est vide
-            if csvfile.tell() == 0:
-                writer.writeheader()
+        budgets = {"Mois":month,"Année":year}
 
-            row = {'Mois': month, 'Année': year}
-            row.update(budgets)
-            writer.writerow(row)
+        for category, entry in entries.items():
+            try:
+                budgets[category] = float(entry.get().replace(',','.'))
+            except ValueError:
+                messagebox.showerror("Erreur de saisie", f"Veuillez entrer un nombre valide pour le budget de {category}")
+                return
+        ajouter_modifier_budget(month,year,budgets)
 
         messagebox.showinfo("Succès", "Le budget a été enregistré avec succès pour le mois "+str(month)+"/"+str(year))
 
 
     # TODO A finir marche pas pour les doublons
-def ajouter_modifier_budget(month,year,budget):
+def ajouter_modifier_budget(mois,annee,budget):
+
     with open(CSV_FILE_BUDGET, mode='r', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
-        fieldnames = reader.fieldnames
+        liste = []
         for row in reader:
-            print(row)
+            if(int(row["Mois"]) == int(mois) and int(row["Année"])==int(annee)) :
+                print("deja existant")
+            else :
+                liste.append(row)
+        liste.append(budget)
+    with open(CSV_FILE_BUDGET, 'w', newline='') as csvfile:
+        fieldnames = ['Mois', 'Année'] + categories
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+        for i in range(len(liste)):
+            writer.writerow(liste[i])
 
 
 
-# Création d'un cadre pour organiser les widgets
+
 frame = ttk.Frame(root, padding="10")
 frame.grid(row=0, column=2,rowspan= 7)
 
