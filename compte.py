@@ -6,13 +6,20 @@ import shutil
 from pathlib import Path
 from tkinter import messagebox
 
+import option # type: ignore
+
 # Chemin du fichier CSV
 CSV_FILE = "save/expenses.csv"
 CSV_FILE_BUDGET = 'save/budget_mensuel.csv'
+CSV_FILE_OPTION = 'save/option.csv'
 
 if not os.path.exists(CSV_FILE_BUDGET):
         with open(CSV_FILE_BUDGET, 'w', newline='') as csvfile:
             print('creating')
+
+options = {"couleur_Nourriture" :"#FFC0CB","couleur_Vie quotidienne" :"#008080","couleur_Santé" :"#b92020","couleur_Loisir" :"#800080","couleur_Vêtement" :"#20b7b9","couleur_Transport" :"#808080","couleur_Coiffeur" :"#A52A2A","couleur_Épargne" :"#008000"}
+
+option.recuperer_options_avec_creation(CSV_FILE_OPTION, options)
 
 def mois_en_nombre(mois):
     mois_dict = {
@@ -163,11 +170,6 @@ def load_expenses():
     selected_year = year_var.get()
     selected_month = month_var.get()
 
-
-
-
-    
-
     if os.path.exists(CSV_FILE):
         with open(CSV_FILE, mode='r', encoding='utf-8') as file:
             reader = csv.reader(file)
@@ -175,11 +177,25 @@ def load_expenses():
                 name, date, price, category, description = row
                 price = float(price)
                 if ("Tous" == selected_year) or ((selected_year == date.split('/')[2] and date.split('/')[1] == selected_month)or  (selected_month == "Tous"and selected_year == date.split('/')[2])) :
-                    if(price >0):
-                        expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('red',))
-                    else :
-                        expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('green',))
+                    
+                    if category == "Nouritture":
+                        expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('Nouritture',))
+                    elif category == "Vie quotidienne" :
+                        expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('Vie quotidienne',))
+                    elif category == "Santé" :
+                        expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('Santé',))
+                    elif category == "Loisir" :
+                        expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('Loisir',))
+                    elif category == "Vêtement" :
+                        expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('Vêtement',))
+                    elif category == "Transport" :
+                        expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('Transport',))
+                    elif category == "Coiffeur" :
+                        expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('Coiffeur',))
+                    elif category == "Épargne" :
+                        expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('Épargne',))
 
+    trier_colonne(expenses_table, "Date", "date")
     update_totals()
 
 # Fonction pour effacer le tableau des dépenses
@@ -288,27 +304,41 @@ price_var = StringVar()
 category_var = StringVar()
 category_var.set(categories[0])
 
+
+    
+style = ttk.Style()
+print(ttk.Style().theme_names())
+# style.theme_use('default')
+style.configure("TCombobox", 
+                fieldbackground='#34495e', 
+                background='#1abc9c',
+                foreground='white',
+                borderwidth=0,
+                padding=10,
+                arrowcolor='white')
+
+combo = ttk.Combobox(root, values=["test","bis","g"], font=("Helvetica", 12), state="readonly", style="TCombobox").grid(row=10,column=10)
+
 depenseFrame = ttk.Frame(root, padding="10")
 depenseFrame.grid(row=0, column=0)
 
 
 # Widgets pour les champs d'entrée
-Label(depenseFrame, text="Ajouter une dépense").grid(row=0, column=0,columnspan=2)
+label = ttk.Label(depenseFrame, text="Ajouter une dépense").grid(row=0, column=0,columnspan=2)
 
-
-Label(depenseFrame, text="Nom").grid(row=1, column=0)
+label = ttk.Label(depenseFrame, text="Nom").grid(row=1, column=0)
 Entry(depenseFrame, textvariable=name_var).grid(row=1, column=1)
 
-Label(depenseFrame, text="Date (JJ/MM/AAAA)").grid(row=2, column=0)
+label = ttk.Label(depenseFrame, text="Date (JJ/MM/AAAA)").grid(row=2, column=0)
 Entry(depenseFrame, textvariable=date_var).grid(row=2, column=1)
 
-Label(depenseFrame, text="Prix").grid(row=3, column=0)
+label = ttk.Label(depenseFrame, text="Prix").grid(row=3, column=0)
 Entry(depenseFrame, textvariable=price_var).grid(row=3, column=1)
 
-Label(depenseFrame, text="Catégorie").grid(row=4, column=0)
+label = ttk.Label(depenseFrame, text="Catégorie").grid(row=4, column=0)
 OptionMenu(depenseFrame, category_var, *categories).grid(row=4, column=1)
 
-Label(depenseFrame, text="Description").grid(row=5, column=0)
+label = ttk.Label(depenseFrame, text="Description").grid(row=5, column=0)
 description_text = Text(depenseFrame, height=1, width=15)
 description_text.grid(row=5, column=1)
 
@@ -368,8 +398,15 @@ expenses_table.column('Prix', width=100)
 expenses_table.column('Catégorie', width=100)
 expenses_table.column('Description', width=500)
 
-expenses_table.tag_configure('red', background='light sky blue')
-expenses_table.tag_configure('green', background='lightgreen')
+expenses_table.tag_configure('Nourriture', background = options["couleur_Nourriture"] )
+expenses_table.tag_configure('Vie quotidienne', background = options["couleur_Vie quotidienne"])
+expenses_table.tag_configure('Santé', background = options["couleur_Santé"])
+expenses_table.tag_configure('Loisir', background = options["couleur_Loisir"])
+expenses_table.tag_configure('Vêtement', background = options["couleur_Vêtement"])
+expenses_table.tag_configure('Transport', background = options["couleur_Transport"])
+expenses_table.tag_configure('Coiffeur', background = options["couleur_Coiffeur"])
+expenses_table.tag_configure('Épargne', background = options["couleur_Épargne"])
+
 
 # Bouton pour supprimer une dépense sélectionnée
 # Button(root, text="Supprimer Dépense", command=delete_expense).grid(row=9, column=1)
@@ -479,7 +516,7 @@ def save_budget():
         ajouter_modifier_budget(month,year,budgets)
 
         messagebox.showinfo("Succès", "Le budget a été enregistré avec succès pour le mois "+str(month)+"/"+str(year))
-
+    load_expenses()
 
     # TODO A finir marche pas pour les doublons
 def ajouter_modifier_budget(mois,annee,budget):
