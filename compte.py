@@ -131,10 +131,16 @@ def add_expense():
         float(price)
     except ValueError:
         try :
-            list = price.split("*")
-            total = 1
-            for i in range(len(list)) :
-                total = total*int(list[i])
+            if("*" in price) :
+                list = price.split("*")
+                total = 1
+                for i in range(len(list)) :
+                    total = total*float(list[i])
+            elif ("+" in price) :
+                list = price.split("+")
+                total = 0
+                for i in range(len(list)) :
+                    total = total+float(list[i])
             price = total
         except ValueError:
             messagebox.showerror("Erreur de saisie", f"Veuillez entrer un prix valide")
@@ -247,17 +253,20 @@ def update_totals():
 
 #  TODO COULEUR PAR CASE
     for item in table.get_children():
-        values = table.item(item, 'values')
-        # print(values[9])
-        if float(values[9]) > 0 :  # Supposons que le nom est dans la première colonne
-            current_tags = table.item(item, 'tags')
-            # new_tags = tuple(set(current_tags) | {"gree"})
-            table.item(item, tags="green")
-        else :
-            current_tags = table.item(item, 'tags')
-            # new_tags = tuple(set(current_tags) | {"gree"})
-            table.item(item, tags="red")
-
+        try :
+            values = table.item(item, 'values')
+            # print(values[9])
+            if float(values[9]) > 0 :  # Supposons que le nom est dans la première colonne
+                current_tags = table.item(item, 'tags')
+                # new_tags = tuple(set(current_tags) | {"gree"})
+                table.item(item, tags="green")
+            else :
+                current_tags = table.item(item, 'tags')
+                # new_tags = tuple(set(current_tags) | {"gree"})
+                table.item(item, tags="red")
+        except ValueError:
+            messagebox.showerror("Erreur de calcul", f"Impossible de bien mettre les couleurs")
+            return
 # Fonction pour supprimer une dépense sélectionnée
 def delete_expense():
     selected_item = expenses_table.selection()
@@ -307,7 +316,6 @@ category_var.set(categories[0])
 
     
 style = ttk.Style()
-print(ttk.Style().theme_names())
 # style.theme_use('default')
 # style.configure("TCombobox", 
 #                 fieldbackground='#34495e', 
@@ -438,7 +446,7 @@ submit_button.grid(row=1, column=0)
 # Créer le tableau avec Treeview
 table = ttk.Treeview(root, columns=categoriess, show='headings')
 table.grid(row=2, column=1)
-table["height"] = 12
+table["height"] = 13
 
 table.tag_configure('red', background='salmon')
 table.tag_configure('green', background='lightgreen')
@@ -458,6 +466,7 @@ for categorie in categoriess:
 # Ajouter les lignes pour chaque mois
 for i, mois in enumerate(lMois):
     table.insert('', 'end', iid=mois, values=(mois, *["" for _ in categoriess[:-1]], "0,00"))
+
 
 
 # Configurer la mise en forme de la grille
@@ -653,5 +662,20 @@ frame.grid_columnconfigure(3, weight=1)
 
 # Lancer la boucle principale de l'interface graphique
 load_expenses()
+
+totalList = ["Total"]
+for i in range(1,len(categoriess)) :
+    somme = 0
+    for item in table.get_children():
+        row = table.item(item)['values']
+        try :
+            somme += float(row[i])
+        except ValueError:
+            messagebox.showerror("Erreur de calcul", f"Impossible de faire le calcul du total annuel ")
+                    
+    totalList.append(round( somme,2))
+
+table.insert('', 'end', iid="Total", values=totalList)
+
 root.mainloop()
 
