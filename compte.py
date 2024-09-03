@@ -178,8 +178,8 @@ def load_expenses():
                 price = float(price)
                 if ("Tous" == selected_year) or ((selected_year == date.split('/')[2] and date.split('/')[1] == selected_month)or  (selected_month == "Tous"and selected_year == date.split('/')[2])) :
                     
-                    if category == "Nouritture":
-                        expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('Nouritture',))
+                    if category == "Nourriture":
+                        expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('Nourriture',))
                     elif category == "Vie quotidienne" :
                         expenses_table.insert("", "end", values=(name, date, f"{price:.2f}", category, description), tags=('Vie quotidienne',))
                     elif category == "Santé" :
@@ -309,15 +309,15 @@ category_var.set(categories[0])
 style = ttk.Style()
 print(ttk.Style().theme_names())
 # style.theme_use('default')
-style.configure("TCombobox", 
-                fieldbackground='#34495e', 
-                background='#1abc9c',
-                foreground='white',
-                borderwidth=0,
-                padding=10,
-                arrowcolor='white')
+# style.configure("TCombobox", 
+#                 fieldbackground='#34495e', 
+#                 background='#1abc9c',
+#                 foreground='white',
+#                 borderwidth=0,
+#                 padding=10,
+#                 arrowcolor='white')
 
-combo = ttk.Combobox(root, values=["test","bis","g"], font=("Helvetica", 12), state="readonly", style="TCombobox").grid(row=10,column=10)
+# combo = ttk.Combobox(root, values=["test","bis","g"], font=("Helvetica", 12), state="readonly", style="TCombobox").grid(row=10,column=10)
 
 depenseFrame = ttk.Frame(root, padding="10")
 depenseFrame.grid(row=0, column=0)
