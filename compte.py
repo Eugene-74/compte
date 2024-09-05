@@ -11,7 +11,8 @@ import option # type: ignore
 # Chemin du fichier CSV
 CSV_FILE = "save/expenses.csv"
 CSV_FILE_BUDGET = 'save/budget_mensuel.csv'
-CSV_FILE_OPTION = 'save/option.csv'
+CSV_FILE_OPTION = 'save/option.txt'
+enCoursEdition = False
 
 if not os.path.exists(CSV_FILE_BUDGET):
         with open(CSV_FILE_BUDGET, 'w', newline='') as csvfile:
@@ -19,7 +20,7 @@ if not os.path.exists(CSV_FILE_BUDGET):
 
 options = {"couleur_Nourriture" :"#FFC0CB","couleur_Vie quotidienne" :"#008080","couleur_Santé" :"#b92020","couleur_Loisir" :"#800080","couleur_Vêtement" :"#20b7b9","couleur_Transport" :"#808080","couleur_Coiffeur" :"#A52A2A","couleur_Épargne" :"#008000"}
 
-option.recuperer_options_avec_creation(CSV_FILE_OPTION, options)
+options = option.recuperer_options_avec_creation(CSV_FILE_OPTION, options)
 
 def mois_en_nombre(mois):
     mois_dict = {
@@ -90,7 +91,7 @@ def add_expense():
     date = date_var.get()
     price = price_var.get().replace(",",".")
     category = category_var.get()
-    description = description_text.get("1.0", END).strip()
+    description = descrition_var.get()
 
     try :
         list = date.split("/")
@@ -110,14 +111,12 @@ def add_expense():
         elif len(str(int(list[1]))) == 2 :
             mois = str(int(list[1]))
 
-        # print(len(list[2]))
 
         if len(list[2]) != 2 and len(list[2]) != 4:
             messagebox.showerror("Erreur de saisie", f"Veuillez entrer une date valide, l'année doit être à 2 ou 4 chiffre (0000 ou 00)")
         elif int(list[2]) < 0:
             messagebox.showerror("Erreur de saisie", f"Veuillez entrer une date valide, l'année doit être suppérieur à 0")
         elif len(list[2]) == 2 :
-            # print("20" + str(int(list[2])))
             annee = "20" + str(int(list[2]))
         elif len(list[2]) == 4 :
             annee = str(int(list[2]))
@@ -148,10 +147,18 @@ def add_expense():
 
     
     if name and date and price and category:
+        with open(CSV_FILE, mode='r', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                name1, date1, price1, category1, description1 = row
+                if(name == name1 and date == date1 and price == price1 and category == category1 and description == description1) :
+                    messagebox.showerror("Erreur de saisie", f"L'element existe déjà")
+                    return
         with open(CSV_FILE, mode='a', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow([name, date, price, category, description])
         load_expenses()
+
     else:
         print("Tous les champs doivent être remplis")
 
@@ -166,6 +173,7 @@ def add_expense():
     with open(autoSavePath, 'w') as file:
         file.write("")
     shutil.copy(CSV_FILE, autoSavePath)
+    return True
 
 # Fonction pour charger et afficher les dépenses
 def load_expenses():
@@ -226,9 +234,6 @@ def update_totals():
                     # TODO SELECTED MONTH
                     # Vérifier si la dépense correspond au mois et à l'année sélectionnés
                     if((lMois[int(date.split('/')[1])-1]) == mois) and (date.split('/')[2] == selected_year):
-                        # print("modif")
-                        
-                        # print(category)
                         totals[category] -= price
                         
         total_general = totals["Nourriture"] +totals["Vie quotidienne"]+ totals["Santé"]+totals["Loisir"]+totals["Vêtement"]+totals["Transport"]+totals["Coiffeur"]
@@ -289,7 +294,77 @@ def delete_expense():
                     writer.writerow(row)
         
         # Recharger les dépenses après suppression
+        global enCoursEdition
+        enCoursEdition = False
         load_expenses()
+    else :
+        messagebox.showerror("Erreur de saisie", f"Veuillez selectioner un element à supprimer")
+
+
+def show_expense():
+    selected_item = expenses_table.selection()
+    if selected_item:
+        # Récupérer les valeurs de la dépense sélectionnée
+        item_values = expenses_table.item(selected_item, "values")
+        # print(item_values)
+        try:
+            name = item_values[0]
+            date = item_values[1]
+            price = item_values[2]
+            category = item_values[3]
+            description = item_values[4]
+
+            name_var.set(name)
+            date_var.set(date)
+            price_var.set(price)
+            category_var.set(category)
+            descrition_var.set(description)
+            
+            global enCoursEdition
+
+            enCoursEdition = True
+
+            global lastSelected
+
+            lastSelected = item_values
+            reload()
+
+        except IndexError:
+            messagebox.showerror("Erreur de saisie", f"Impossible d'afficher les elements")
+            return
+    else :
+        messagebox.showerror("Erreur de saisie", f"Veuillez selectioner un element à modifier / dupliquer")
+
+def edit_expense():
+    if add_expense() :
+
+        item_values = lastSelected
+        name = item_values[0]
+        date = item_values[1]
+        price = item_values[2]
+        category = item_values[3]
+        description = item_values[4]
+        
+        # Ouvrir le fichier CSV et supprimer la ligne correspondante
+        with open(CSV_FILE, mode='r', encoding='utf-8') as file:
+            rows = list(csv.reader(file))
+        with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            for row in rows:
+                if row[0] != name or row[1] != date  or row[3] != category or row[4] != description:
+                    writer.writerow(row)
+        
+        # Recharger les dépenses après suppression
+        
+        global enCoursEdition
+
+        enCoursEdition = False
+
+        load_expenses()
+    else :
+        enCoursEdition = False
+        reload()
+        messagebox.showerror("Erreur de saisie", f"Arete de la modification")
 
 
 
@@ -312,20 +387,11 @@ date_var = StringVar()
 price_var = StringVar()
 category_var = StringVar()
 category_var.set(categories[0])
+descrition_var = StringVar()
 
 
     
 style = ttk.Style()
-# style.theme_use('default')
-# style.configure("TCombobox", 
-#                 fieldbackground='#34495e', 
-#                 background='#1abc9c',
-#                 foreground='white',
-#                 borderwidth=0,
-#                 padding=10,
-#                 arrowcolor='white')
-
-# combo = ttk.Combobox(root, values=["test","bis","g"], font=("Helvetica", 12), state="readonly", style="TCombobox").grid(row=10,column=10)
 
 depenseFrame = ttk.Frame(root, padding="10")
 depenseFrame.grid(row=0, column=0)
@@ -347,13 +413,8 @@ label = ttk.Label(depenseFrame, text="Catégorie").grid(row=4, column=0)
 OptionMenu(depenseFrame, category_var, *categories).grid(row=4, column=1)
 
 label = ttk.Label(depenseFrame, text="Description").grid(row=5, column=0)
-description_text = Text(depenseFrame, height=1, width=15)
-description_text.grid(row=5, column=1)
+Entry(depenseFrame, textvariable=descrition_var).grid(row=5, column=1)
 
-# Bouton pour ajouter une dépense
-submit_button = ttk.Button(depenseFrame,text="Ajouter", command=add_expense)
-submit_button.grid(row=6, column=0,columnspan=2)
-# Button(root, text="Ajouter", command=add_expense).grid(row=6, column=0,columnspan=2)
 
 current_date_time = datetime.now()
 
@@ -416,23 +477,16 @@ expenses_table.tag_configure('Coiffeur', background = options["couleur_Coiffeur"
 expenses_table.tag_configure('Épargne', background = options["couleur_Épargne"])
 
 
-# Bouton pour supprimer une dépense sélectionnée
-# Button(root, text="Supprimer Dépense", command=delete_expense).grid(row=9, column=1)
-submit_button = ttk.Button(expensesFrame, text="Supprimer dépense", command=delete_expense)
+
+
+editFrame = ttk.Frame(expensesFrame, padding="10")
+editFrame.grid(row=1, column=0)
+
+submit_button = ttk.Button(editFrame, text="Supprimer", command=delete_expense)
 submit_button.grid(row=1, column=0)
+submit_button = ttk.Button(editFrame, text="Modifier / Dupliquer", command=show_expense)
+submit_button.grid(row=1, column=1)
 
-# Zone de texte pour afficher les totaux
-# expenses_list = Text(root, height=15, width=60)
-# expenses_list.grid(row=9, column=0, columnspan=3)
-
-# Bouton pour charger les dépenses
-
-
-
-
-
-
-# TOTAL SOMME
 
 
 
@@ -446,7 +500,10 @@ submit_button.grid(row=1, column=0)
 # Créer le tableau avec Treeview
 table = ttk.Treeview(root, columns=categoriess, show='headings')
 table.grid(row=2, column=1)
-table["height"] = 13
+if str(current_date_time.year) == str(year_var.get()) :
+    table["height"] = 14
+else :
+    table["height"] = 13
 
 table.tag_configure('red', background='salmon')
 table.tag_configure('green', background='lightgreen')
@@ -658,10 +715,42 @@ frame.grid_columnconfigure(1, weight=1)
 frame.grid_columnconfigure(2, weight=1)
 frame.grid_columnconfigure(3, weight=1)
 
-# trier_colonne(expenses_table,1,"date")
 
-# Lancer la boucle principale de l'interface graphique
 load_expenses()
+
+def stopEdition():
+    global enCoursEdition
+    enCoursEdition = False
+    reload()
+
+
+# initialisation de la frame
+global modif_editFrame
+modif_editFrame = ttk.Frame(depenseFrame, padding="10")
+
+def reload():
+    if(enCoursEdition):
+        #  re creation de la frame et des bouton
+        global modif_editFrame
+        modif_editFrame = ttk.Frame(depenseFrame, padding="10")
+        submit_button = ttk.Button(modif_editFrame,text="Modifier", command=edit_expense).grid(row=0,column=0)
+        submit_button = ttk.Button(modif_editFrame,text="Annuler", command=stopEdition).grid(row=0,column=1)
+        submit_button = ttk.Button(modif_editFrame,text="Ajouter", command=add_expense).grid(row=0,column=2)
+
+
+        modif_editFrame.grid(row=6, column=0,columnspan=2)
+
+    else :
+        modif_editFrame.destroy()
+        submit_button = ttk.Button(depenseFrame,text="Ajouter", command=add_expense)
+        submit_button.grid(row=6, column=0,columnspan=2)
+    
+
+
+
+reload()
+
+
 
 totalList = ["Total"]
 for i in range(1,len(categoriess)) :
@@ -675,7 +764,29 @@ for i in range(1,len(categoriess)) :
                     
     totalList.append(round( somme,2))
 
+totalActuelList = ["Total actuel"]
+for i in range(1,len(categoriess)) :
+    somme = 0
+    for item in table.get_children():
+        
+        row = table.item(item)['values']
+        
+        try :
+            if str(current_date_time.year) == str(year_var.get()) :
+                if int(current_date_time.month) >= int(mois_en_nombre(row[0])):
+                    somme += float(row[i])
+        except ValueError:
+            messagebox.showerror("Erreur de calcul", f"Impossible de faire le calcul du total annuel ")
+                    
+    totalActuelList.append(round( somme,2))
+
+if str(current_date_time.year) == str(year_var.get()) :
+    table.insert('', 'end', iid="Total actuel", values=totalActuelList)
+    
 table.insert('', 'end', iid="Total", values=totalList)
+
+
+
 
 root.mainloop()
 
