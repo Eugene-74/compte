@@ -715,8 +715,9 @@ frame.grid_columnconfigure(1, weight=1)
 frame.grid_columnconfigure(2, weight=1)
 frame.grid_columnconfigure(3, weight=1)
 
-
+# TODO pas opti fait 2 fois .......... car permet de carlculer les totaux
 load_expenses()
+
 
 def stopEdition():
     global enCoursEdition
@@ -786,6 +787,7 @@ if str(current_date_time.year) == str(year_var.get()) :
 table.insert('', 'end', iid="Total", values=totalList)
 
 
+load_expenses()
 
 
 root.mainloop()
