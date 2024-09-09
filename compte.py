@@ -290,7 +290,7 @@ def delete_expense():
         with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             for row in rows:
-                if row[0] != name or row[1] != date  or row[3] != category or row[4] != description:
+                if row[0] != name or row[1] != date or row[2] != price or row[3] != category or row[4] != description:
                     writer.writerow(row)
         
         # Recharger les dépenses après suppression
@@ -351,7 +351,7 @@ def edit_expense():
         with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             for row in rows:
-                if row[0] != name or row[1] != date  or row[3] != category or row[4] != description:
+                if row[0] != name or row[1] != date or row[2] != price or row[3] != category or row[4] != description:
                     writer.writerow(row)
         
         # Recharger les dépenses après suppression
