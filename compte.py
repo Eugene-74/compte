@@ -134,7 +134,7 @@ def add_expense():
 
            
             if "*" in price or "+" in price or "-" in price or "/" in price:
-                price = eval(price)
+                eval(price)
             else:
                 raise ValueError
             # if("*" in price) :
@@ -197,7 +197,10 @@ def load_expenses():
             reader = csv.reader(file)
             for row in reader:
                 name, date, price, category, description = row
-                price = float(price)
+                if "*" in price or "+" in price or "-" in price or "/" in price:
+                    price = eval(price)
+                else:
+                    price = float(price)
                 if ("Tous" == selected_year) or ((selected_year == date.split('/')[2] and date.split('/')[1] == selected_month)or  (selected_month == "Tous"and selected_year == date.split('/')[2])) :
                     
                     if category == "Nourriture":
@@ -238,7 +241,10 @@ def update_totals():
                 reader = csv.reader(file)
                 for row in reader:
                     name, date, price, category, description = row
-                    price = float(price)
+                    if "*" in price or "+" in price or "-" in price or "/" in price:
+                        price = eval(price)
+                    else:
+                        price = float(price)
                     # TODO SELECTED MONTH
                     # Vérifier si la dépense correspond au mois et à l'année sélectionnés
                     if((lMois[int(date.split('/')[1])-1]) == mois) and (date.split('/')[2] == selected_year):
@@ -291,14 +297,19 @@ def delete_expense():
         price = item_values[2]
         category = item_values[3]
         description = item_values[4]
-        
+
         # Ouvrir le fichier CSV et supprimer la ligne correspondante
         with open(CSV_FILE, mode='r', encoding='utf-8') as file:
             rows = list(csv.reader(file))
         with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             for row in rows:
-                if row[0] != name or row[1] != date or float(price) != float(row[2])  or row[3] != category or row[4] != description:
+                if "*" in row[2] or "+" in row[2] or "-" in row[2] or "/" in row[2]:
+                    priceFloat = eval(row[2])
+                else:
+                    priceFloat = float(row[2])
+                # print(row[2])
+                if row[0] != name or row[1] != date or float(price) != priceFloat  or row[3] != category or row[4] != description:
                     writer.writerow(row)
         
         # Recharger les dépenses après suppression
@@ -321,6 +332,18 @@ def show_expense():
             price = item_values[2]
             category = item_values[3]
             description = item_values[4]
+
+            with open(CSV_FILE, mode='r', encoding='utf-8') as file:
+                rows = list(csv.reader(file))
+            for row in rows :
+                if "*" in row[2] or "+" in row[2] or "-" in row[2] or "/" in row[2]:
+                    priceFloat = eval(row[2])
+                else:
+                    priceFloat = float(row[2])
+                # print(price)
+                if row[0] == name and row[1] == date and float(price) == priceFloat  and row[3] == category and row[4] == description:
+                    price = row[2]
+                    break
 
             name_var.set(name)
             date_var.set(date)
@@ -352,6 +375,8 @@ def edit_expense():
         price = item_values[2]
         category = item_values[3]
         description = item_values[4]
+
+        
         
         # Ouvrir le fichier CSV et supprimer la ligne correspondante
         with open(CSV_FILE, mode='r', encoding='utf-8') as file:
@@ -490,7 +515,7 @@ editFrame.grid(row=1, column=0)
 
 submit_button = ttk.Button(editFrame, text="Supprimer", command=delete_expense)
 submit_button.grid(row=1, column=0)
-submit_button = ttk.Button(editFrame, text="Modifier / Dupliquer", command=show_expense)
+submit_button = ttk.Button(editFrame, text="Modifier / Dupliquer", command=lambda: (stopEdition(), show_expense()) if enCoursEdition else show_expense())
 submit_button.grid(row=1, column=1)
 
 
