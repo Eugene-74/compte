@@ -1,1 +1,2 @@
-cmd /K python compte.py
+python compte.py
+#cmd /K 

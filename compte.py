@@ -54,7 +54,7 @@ lMois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'aoû
 categoriess = ['Mois','Nourriture', 'Vie quotidienne', 'Santé', 'Loisir', 'Vêtement', 'Transport', 'Coiffeur', 'Épargne', 'Total']
 
 months = ["Tous", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-years = ["Tous", "2022", "2023", "2024"]  # Mettre à jour avec les années disponibles dans votre CSV
+years = ["Tous", "2022", "2023", "2024","2025"]  # Mettre à jour avec les années disponibles dans votre CSV
 
 directory_path = Path('save')
 
@@ -130,17 +130,24 @@ def add_expense():
         float(price)
     except ValueError:
         try :
-            if("*" in price) :
-                list = price.split("*")
-                total = 1
-                for i in range(len(list)) :
-                    total = total*float(list[i])
-            elif ("+" in price) :
-                list = price.split("+")
-                total = 0
-                for i in range(len(list)) :
-                    total = total+float(list[i])
-            price = total
+
+
+           
+            if "*" in price or "+" in price or "-" in price or "/" in price:
+                price = eval(price)
+            else:
+                raise ValueError
+            # if("*" in price) :
+            #     list = price.split("*")
+            #     total = 1
+            #     for i in range(len(list)) :
+            #         total = total*float(list[i])
+            # elif ("+" in price) :
+            #     list = price.split("+")
+            #     total = 0
+            #     for i in range(len(list)) :
+            #         total = total+float(list[i])
+            # price = total
         except ValueError:
             messagebox.showerror("Erreur de saisie", f"Veuillez entrer un prix valide")
             return
@@ -151,7 +158,8 @@ def add_expense():
             reader = csv.reader(file)
             for row in reader:
                 name1, date1, price1, category1, description1 = row
-                if(name == name1 and date == date1 and price == price1 and category == category1 and description == description1) :
+                if(name == name1 and date == date1  and category == category1 and description == description1 and price == price1) :
+                    # and price == price1
                     messagebox.showerror("Erreur de saisie", f"L'element existe déjà")
                     return
         with open(CSV_FILE, mode='a', newline='', encoding='utf-8') as file:
@@ -290,7 +298,7 @@ def delete_expense():
         with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             for row in rows:
-                if row[0] != name or row[1] != date or row[2] != price or row[3] != category or row[4] != description:
+                if row[0] != name or row[1] != date or float(price) != float(row[2])  or row[3] != category or row[4] != description:
                     writer.writerow(row)
         
         # Recharger les dépenses après suppression
@@ -351,15 +359,13 @@ def edit_expense():
         with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             for row in rows:
+                print(row)
                 if row[0] != name or row[1] != date or row[2] != price or row[3] != category or row[4] != description:
                     writer.writerow(row)
         
         # Recharger les dépenses après suppression
         
-        global enCoursEdition
-
-        enCoursEdition = False
-
+        stopEdition()
         load_expenses()
     else :
         enCoursEdition = False
@@ -736,7 +742,7 @@ def reload():
         modif_editFrame = ttk.Frame(depenseFrame, padding="10")
         submit_button = ttk.Button(modif_editFrame,text="Modifier", command=edit_expense).grid(row=0,column=0)
         submit_button = ttk.Button(modif_editFrame,text="Annuler", command=stopEdition).grid(row=0,column=1)
-        submit_button = ttk.Button(modif_editFrame,text="Ajouter", command=add_expense).grid(row=0,column=2)
+        submit_button = ttk.Button(modif_editFrame, text="Ajouter", command=lambda: [add_expense(), stopEdition()]).grid(row=0,column=2)
 
 
         modif_editFrame.grid(row=6, column=0,columnspan=2)
