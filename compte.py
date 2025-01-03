@@ -190,7 +190,7 @@ def calculTotal():
         for item in table.get_children():
             row = table.item(item)['values']
             try:
-                if row[0] != "Total":
+                if row[0] != "Total" and row[0] != "Total actuel":
                     somme += float(row[i])
             except ValueError:
                 messagebox.showerror("Erreur de calcul", f"Impossible de faire le calcul du total annuel ")
