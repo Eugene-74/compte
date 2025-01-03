@@ -183,6 +183,37 @@ def add_expense():
     shutil.copy(CSV_FILE, autoSavePath)
     return True
 
+def calculTotal():
+    totalList = ["Total"]
+    for i in range(1,len(categoriess)) :
+        somme = 0
+        for item in table.get_children():
+            row = table.item(item)['values']
+            try:
+                if row[0] != "Total":
+                    somme += float(row[i])
+            except ValueError:
+                messagebox.showerror("Erreur de calcul", f"Impossible de faire le calcul du total annuel ")
+                        
+        totalList.append(round( somme,2))
+        # Check if "Total" row already exists
+    if "Total" in table.get_children():
+        table.delete("Total")
+    table.insert('', 'end', iid="Total", values=totalList)
+
+    for item in table.get_children():
+        try :
+            values = table.item(item, 'values')
+            if float(values[9]) > 0 : 
+                current_tags = table.item(item, 'tags')
+                table.item(item, tags="green")
+            else :
+                current_tags = table.item(item, 'tags')
+                table.item(item, tags="red")
+        except ValueError:
+            messagebox.showerror("Erreur de calcul", f"Impossible de bien mettre les couleurs")
+            return
+
 # Fonction pour charger et afficher les dépenses
 def load_expenses():
     updateBudget()
@@ -229,7 +260,6 @@ def clear_table():
 
 # Fonction pour mettre à jour les totaux par catégorie et total général
 def update_totals():
-
     for mois in lMois :
         totals = {cat: 0 for cat in categories}
         selected_year = year_var.get()
@@ -264,9 +294,6 @@ def update_totals():
                 value = float(value)
             except ValueError:
                 value = 0.0
-        
-                
-
             table.set(mois,cat,f"{value:.2f}")
         table.set(mois, 'Total', f"{total_general:.2f}")
 
@@ -475,7 +502,7 @@ year_menu = OptionMenu(dateFrame, year_var, *years)
 year_menu.grid(row=0, column=1)
 year_var.set(current_date_time.year)
 
-submit_button = ttk.Button(dateFrame, text="Mettre à jour", command=load_expenses)
+submit_button = ttk.Button(dateFrame, text="Mettre à jour", command=lambda: [load_expenses(),calculTotal()])
 submit_button.grid(row=0, column=2)
 
 # Button(dateFrame, text="Mettre à jour", command=load_expenses).grid(row=0, column=2  )
@@ -689,6 +716,8 @@ entries = {}
 budgetFrame = ttk.Frame(root, padding="10")
 budgetFrame.grid(row=2, column=0)
 
+
+
 def updateBudget():
     # Dictionnaire pour stocker les entrées
     month = month_var.get()
@@ -777,24 +806,8 @@ def reload():
         submit_button = ttk.Button(depenseFrame,text="Ajouter", command=add_expense)
         submit_button.grid(row=6, column=0,columnspan=2)
     
-
-
-
 reload()
 
-
-
-totalList = ["Total"]
-for i in range(1,len(categoriess)) :
-    somme = 0
-    for item in table.get_children():
-        row = table.item(item)['values']
-        try :
-            somme += float(row[i])
-        except ValueError:
-            messagebox.showerror("Erreur de calcul", f"Impossible de faire le calcul du total annuel ")
-                    
-    totalList.append(round( somme,2))
 
 totalActuelList = ["Total actuel"]
 for i in range(1,len(categoriess)) :
@@ -815,8 +828,8 @@ for i in range(1,len(categoriess)) :
 if str(current_date_time.year) == str(year_var.get()) :
     table.insert('', 'end', iid="Total actuel", values=totalActuelList)
     
-table.insert('', 'end', iid="Total", values=totalList)
 
+calculTotal()
 
 load_expenses()
 
