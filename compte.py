@@ -46,7 +46,6 @@ def mois_en_nombre(mois):
 
 # Liste des catégories
 categories = ["Nourriture", "Vie quotidienne", "Santé", "Loisir", "Vêtement", "Transport", "Coiffeur", "Épargne"]
-# budget = [212,30,20,30,30,84,12,0]
 
 # Liste des mois et des catégories
 lMois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
@@ -201,10 +200,32 @@ def calculTotal():
         table.delete("Total")
     table.insert('', 'end', iid="Total", values=totalList)
 
+    totalActuelList = ["Total actuel"]
+    for i in range(1,len(categoriess)) :
+        somme = 0
+        for item in table.get_children():
+        
+            row = table.item(item)['values']
+        
+            try :
+                if row[0] != "Total" and row[0] != "Total actuel":
+                    if str(current_date_time.year) == str(year_var.get()) :
+                        if int(current_date_time.month) >= int(mois_en_nombre(row[0])):
+                            somme += float(row[i])
+            except ValueError:
+                messagebox.showerror("Erreur de calcul", f"Impossible de faire le calcul du total annuel ")            
+        totalActuelList.append(round( somme,2))
+
+    if "Total actuel" in table.get_children():
+        table.delete("Total actuel")
+
+    if str(current_date_time.year) == str(year_var.get()) :
+        table.insert('', 'end', iid="Total actuel", values=totalActuelList)
+
     for item in table.get_children():
         try :
             values = table.item(item, 'values')
-            if float(values[9]) > 0 : 
+            if float(values[len(categoriess)-1]) > 0 : 
                 current_tags = table.item(item, 'tags')
                 table.item(item, tags="green")
             else :
@@ -253,6 +274,7 @@ def load_expenses():
 
     trier_colonne(expenses_table, "Date", "date")
     update_totals()
+    calculTotal()
 
 # Fonction pour effacer le tableau des dépenses
 def clear_table():
@@ -301,14 +323,11 @@ def update_totals():
     for item in table.get_children():
         try :
             values = table.item(item, 'values')
-            # print(values[9])
-            if float(values[9]) > 0 :  # Supposons que le nom est dans la première colonne
+            if float(values[len(categoriess)-1]) > 0 :  # Supposons que le nom est dans la première colonne
                 current_tags = table.item(item, 'tags')
-                # new_tags = tuple(set(current_tags) | {"gree"})
                 table.item(item, tags="green")
             else :
                 current_tags = table.item(item, 'tags')
-                # new_tags = tuple(set(current_tags) | {"gree"})
                 table.item(item, tags="red")
         except ValueError:
             messagebox.showerror("Erreur de calcul", f"Impossible de bien mettre les couleurs")
@@ -335,7 +354,6 @@ def delete_expense():
                     priceFloat = eval(row[2])
                 else:
                     priceFloat = float(row[2])
-                # print(row[2])
                 if row[0] != name or row[1] != date or float(price) != priceFloat  or row[3] != category or row[4] != description:
                     writer.writerow(row)
         
@@ -352,7 +370,6 @@ def show_expense():
     if selected_item:
         # Récupérer les valeurs de la dépense sélectionnée
         item_values = expenses_table.item(selected_item, "values")
-        # print(item_values)
         try:
             name = item_values[0]
             date = item_values[1]
@@ -367,7 +384,6 @@ def show_expense():
                     priceFloat = eval(row[2])
                 else:
                     priceFloat = float(row[2])
-                # print(price)
                 if row[0] == name and row[1] == date and float(price) == priceFloat  and row[3] == category and row[4] == description:
                     price = row[2]
                     break
@@ -411,7 +427,6 @@ def edit_expense():
         with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             for row in rows:
-                print(row)
                 if row[0] != name or row[1] != date or row[2] != price or row[3] != category or row[4] != description:
                     writer.writerow(row)
         
@@ -435,8 +450,6 @@ root.update_idletasks()
 root.state('zoomed')
 max_width = root.winfo_screenwidth()
 max_height = root.winfo_screenheight()
-# root.geometry(str(max_width)+'x'+str(max_height))
-# print(f"Largeur: {width}, Hauteur: {height}")
 
 
 # Variables pour les champs d'entrée
@@ -738,6 +751,7 @@ def updateBudget():
         # entry.setvar = 12
         entry.insert(0,budgets[category])
         entries[category] = entry
+    
 updateBudget()
 # Bouton pour valider les budgets
 
@@ -809,24 +823,24 @@ def reload():
 reload()
 
 
-totalActuelList = ["Total actuel"]
-for i in range(1,len(categoriess)) :
-    somme = 0
-    for item in table.get_children():
+# totalActuelList = ["Total actuel"]
+# for i in range(1,len(categoriess)) :
+#     somme = 0
+#     for item in table.get_children():
         
-        row = table.item(item)['values']
+#         row = table.item(item)['values']
         
-        try :
-            if str(current_date_time.year) == str(year_var.get()) :
-                if int(current_date_time.month) >= int(mois_en_nombre(row[0])):
-                    somme += float(row[i])
-        except ValueError:
-            messagebox.showerror("Erreur de calcul", f"Impossible de faire le calcul du total annuel ")
+#         try :
+#             if str(current_date_time.year) == str(year_var.get()) :
+#                 if int(current_date_time.month) >= int(mois_en_nombre(row[0])):
+#                     somme += float(row[i])
+#         except ValueError:
+#             messagebox.showerror("Erreur de calcul", f"Impossible de faire le calcul du total annuel ")
                     
-    totalActuelList.append(round( somme,2))
+#     totalActuelList.append(round( somme,2))
 
-if str(current_date_time.year) == str(year_var.get()) :
-    table.insert('', 'end', iid="Total actuel", values=totalActuelList)
+# if str(current_date_time.year) == str(year_var.get()) :
+#     table.insert('', 'end', iid="Total actuel", values=totalActuelList)
     
 
 calculTotal()
